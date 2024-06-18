@@ -1,0 +1,23 @@
+name: PR and Comment Automation
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+  issue_comment:
+    types: [created, edited]
+
+jobs:
+  process-event:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Handle PR Event
+      if: github.event_name == 'pull_request'
+      run: echo "Handling PR event for PR number ${{ github.event.pull_request.number }}"
+
+    - name: Handle Comment Event
+      if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+      run: echo "Handling comment on PR number ${{ github.event.issue.number }}"
+

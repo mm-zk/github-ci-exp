@@ -1,0 +1,38 @@
+name: Merge on Command
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'PLEASE MERGE')
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Merge Pull Request
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        import requests
+        import json
+        import os
+
+        api_url = f"https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}/merge"
+        headers = {
+            "Authorization": f"token {os.getenv('GITHUB_TOKEN')}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        data = {
+            "commit_title": f"Automatically merging PR #${{ github.event.issue.number }}",
+            "commit_message": "",
+            "merge_method": "merge"  # Can be merge, squash or rebase
+        }
+        response = requests.put(api_url, headers=headers, data=json.dumps(data))
+        if response.status_code == 200:
+            print("Pull request merged successfully!")
+        else:
+            print(f"Failed to merge PR: {response.status_code} - {response.text}")
+
